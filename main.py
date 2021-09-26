@@ -1,3 +1,8 @@
+"""
+22/9/2021
+EE482
+Ahmad Batwa - 1845044
+"""
 import csv
 import random
 from statistics import mode, mean
@@ -20,7 +25,7 @@ def main():
             if col != 'Species' and col != 'Id': dictionary[col] = float(dictionary[col])
 
     # Shuffle the data of each specie
-    random.seed(10406)
+    random.seed(1000000)
     data = random.sample(data[0:50], 50) + random.sample(data[50:100], 50) + random.sample(data[100:150], 50)
 
     # Train data and validation data are divided as 5-Folds(80%-20%)
@@ -39,101 +44,104 @@ def main():
                    data[10:20] + data[60:70] + data[110:120],
                    data[0:10] + data[50:60] + data[100:110]]
 
-    avg_accuracies = {'K': [], 'A1': [], 'A2': []}
+    avg_accuracies = {'K': [], 'L1': [], 'L2': []}
 
-    # Repeat the test for 65 different values of K
-    for K in range(1, 130, 2):
+    # Repeat the test for different values of K
+    for K in range(1, 61, 2):
         all_acc = np.zeros([5, 2])
         # For each value of K, repeat the test with a different combination of data sets
         for i in range(5):
-            # KNN function returns a list [accuracy of A1, accuracy of A2]
+            # KNN function returns a list [accuracy of L1, accuracy of L2]
             all_acc[i] = knn(K, t_data_sets[i], v_data_sets[i])
 
         avg_accuracies['K'].append(K)
-        avg_accuracies['A1'].append(mean(all_acc[:, 0]))
-        avg_accuracies['A2'].append(mean(all_acc[:, 1]))
+        avg_accuracies['L1'].append(mean(all_acc[:, 0]))
+        avg_accuracies['L2'].append(mean(all_acc[:, 1]))
 
     # Write to output file
     with open("output.csv", "w", newline='') as out_file:
         writer = csv.writer(out_file)
-        writer.writerow(['K', 'A1', 'A2'])  # The header
+        writer.writerow(['K', 'L1', 'L2'])  # The header
         for i in range(len(avg_accuracies['K'])):
-            writer.writerow([avg_accuracies['K'][i], avg_accuracies['A1'][i], avg_accuracies['A2'][i]])
+            writer.writerow([avg_accuracies['K'][i], avg_accuracies['L1'][i], avg_accuracies['L2'][i]])
 
 
 def knn(K, t_data, v_data):
     """
     A function that receives training data, validation data, and number of neighbours (K), then implements KNN algorithm
-    using both A1 and A2 distances, and returns the accuracy of the algorithm
+    using both L1 and L2 distances, and returns the accuracy of the algorithm
 
     :param K: Number of nearest neighbours to consider
     :param t_data: Training data
     :param v_data: Validation data
-    :return: a list [Algorithms' accuracy for A1 distance, Algorithms' accuracy for A2 distance]
+    :return: a list [Algorithms' accuracy for L1 distance, Algorithms' accuracy for L2 distance]
     """
 
-    expected_labels_A1 = []
-    expected_labels_A2 = []
+    expected_labels_L1 = []
+    expected_labels_L2 = []
 
-    # TODO: Consider using numpy
     for v_datum in v_data:
-        A1_temp = []
-        A2_temp = []
+        L1_temp = []
+        L2_temp = []
         for t_datum in t_data:
-            A1_dist = abs(t_datum['SepalLengthCm'] - v_datum['SepalLengthCm']) + \
+            L1_dist = abs(t_datum['SepalLengthCm'] - v_datum['SepalLengthCm']) + \
                       abs(t_datum['SepalWidthCm'] - v_datum['SepalWidthCm']) + \
                       abs(t_datum['PetalLengthCm'] - v_datum['PetalLengthCm']) + \
                       abs(t_datum['PetalWidthCm'] - v_datum['PetalWidthCm'])
 
-            A2_dist = (t_datum['SepalLengthCm'] - v_datum['SepalLengthCm'])**2 + \
+            L2_dist = (t_datum['SepalLengthCm'] - v_datum['SepalLengthCm'])**2 + \
                       (t_datum['SepalWidthCm'] - v_datum['SepalWidthCm'])**2 + \
                       (t_datum['PetalLengthCm'] - v_datum['PetalLengthCm'])**2 + \
                       (t_datum['PetalWidthCm'] - v_datum['PetalWidthCm'])**2
 
             # Add each train datum to temp array as tuple(Train datum, its distance from current validation datum)
-            A1_temp.append((t_datum, A1_dist))
-            A2_temp.append((t_datum, A2_dist))
+            L1_temp.append((t_datum, L1_dist))
+            L2_temp.append((t_datum, L2_dist))
 
         # Sort the training data by their distance from the current validation datum
-        A1_temp = sorted(A1_temp, key=lambda k: k[1])
-        A2_temp = sorted(A2_temp, key=lambda k: k[1])
+        L1_temp = sorted(L1_temp, key=lambda k: k[1])
+        L2_temp = sorted(L2_temp, key=lambda k: k[1])
 
-        nearest_neighbours_A1 = A1_temp[:K]
-        nearest_neighbours_A2 = A2_temp[:K]
+        nearest_neighbours_L1 = L1_temp[:K]
+        nearest_neighbours_L2 = L2_temp[:K]
 
-        nns_labels_A1 = []
-        nns_labels_A2 = []
-        for neighbour in nearest_neighbours_A1:
-            nns_labels_A1.append(neighbour[0]['Species'])
-        for neighbour in nearest_neighbours_A2:
-            nns_labels_A2.append(neighbour[0]['Species'])
+        nns_labels_L1 = []
+        nns_labels_L2 = []
+        for neighbour in nearest_neighbours_L1:
+            nns_labels_L1.append(neighbour[0]['Species'])
+        for neighbour in nearest_neighbours_L2:
+            nns_labels_L2.append(neighbour[0]['Species'])
 
-        expected_labels_A1.append(mode(nns_labels_A1))
-        expected_labels_A2.append(mode(nns_labels_A2))
+        expected_labels_L1.append(mode(nns_labels_L1))
+        expected_labels_L2.append(mode(nns_labels_L2))
 
-    true_A1 = 0
-    true_A2 = 0
+    true_L1 = 0
+    true_L2 = 0
 
-    # A1
+    # L1
     for i in range(len(v_data)):
+        #                   Debug area
         # print("Validation data ID: ", v_data[i]['Id'],
-        #       " | Expected label: ", expected_labels_A1[i],
+        #       " | Expected label: ", expected_labels_L1[i],
         #       " | Actual label: ", v_data[i]['Species'])
-        if expected_labels_A1[i] == v_data[i]['Species']:
-            true_A1 += 1
 
-    # A2
+        if expected_labels_L1[i] == v_data[i]['Species']:
+            true_L1 += 1
+
+    # L2
     for i in range(len(v_data)):
+        #                   Debug area
         # print("Validation data ID: ", v_data[i]['Id'],
-        #       " | Expected label: ", expected_labels_A2[i],
+        #       " | Expected label: ", expected_labels_L2[i],
         #       " | Actual label: ", v_data[i]['Species'])
-        if expected_labels_A2[i] == v_data[i]['Species']:
-            true_A2 += 1
 
-    accuracy_A1 = true_A1/30*100
-    accuracy_A2 = true_A2/30*100
+        if expected_labels_L2[i] == v_data[i]['Species']:
+            true_L2 += 1
 
-    return [accuracy_A1, accuracy_A2]
+    accuracy_L1 = true_L1/30*100
+    accuracy_L2 = true_L2/30*100
+
+    return [accuracy_L1, accuracy_L2]
 
 
 if __name__ == "__main__":
