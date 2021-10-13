@@ -1,0 +1,4 @@
+csv
+random
+statistics 
+numpy 
