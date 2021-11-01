@@ -1,2 +1,6 @@
-.idea
+.idea/
+*.m
 *.docx
+*.xlsx
+*.pdf
+*.zip
